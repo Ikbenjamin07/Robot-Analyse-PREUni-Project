@@ -1,28 +1,13 @@
-import csv
-import numpy as np
+from Julia import SF
+from dictator_offer import Get_Lists
+import pandas as pd
 
-# Open the CSV file and read the specified column
-with open("indian_data.csv", newline='') as csvfile:
-    reader = csv.DictReader(csvfile)
-    column_data = [float(row['dictator_offer']) for row in reader]  # Replace 'column_name' with your column name
+def main():
+    robots, dictator_offer = Get_Lists()
+    spatial_frequency  = SF()
 
-# Convert to a NumPy matrix (as a column vector)
+    df = pd.DataFrame({'names': robots, 'offers': dictator_offer, 'SF': spatial_frequency})
+    print(df)
 
-robots = []
-for i in range (0, 18):
-    robots.append([])
-
-
-for i, e in enumerate(column_data):
-    robots[i%18].append(e)  
-
-robotsValues = []
-
-for robot in robots:
-    total = 0
-    for i in robot:
-        total += i
-    robotsValues.append(total/len(robot))
-
-
-
+if __name__ == "__main__":
+    main()
