@@ -2,7 +2,7 @@ import cv2
 import face_recognition
 
 # Load the image
-image = face_recognition.load_image_file("img/Sophia.jpg")  # Replace with your image path
+image = face_recognition.load_image_file("img/Miko2.jpg")  # Replace with your image path
 
 # Detect faces in the image
 face_locations = face_recognition.face_locations(image)
