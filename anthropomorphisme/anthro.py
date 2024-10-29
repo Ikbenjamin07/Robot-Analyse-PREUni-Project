@@ -5,12 +5,11 @@ from PIL import Image
 import os
 
 def main():
-    #faces = facial()
-    gezicht()
+    faces = facial()
 
 def facial():
     # Define the path to the folder
-    folder_path = 'img/'
+    folder_path = 'img/' 
     face_similarity_scores = []
     # Loop over each file in the folder
     for filename in os.listdir(folder_path):
