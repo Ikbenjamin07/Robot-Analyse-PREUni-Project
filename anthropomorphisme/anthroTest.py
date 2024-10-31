@@ -64,6 +64,7 @@ def human_likeness_score():
 def main():
     human_likeness_score()
 
+
 if __name__ == "__main__":
     main()
 
