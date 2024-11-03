@@ -58,7 +58,6 @@ def human_likeness_score():
         human_likeness = (symmetry + aspect_ratio) / 2
 
         scores.append(human_likeness)
-        print(f'{filename}: {human_likeness}')
     return scores
 
 def main():

@@ -5,33 +5,40 @@ from PIL import Image
 import os
 
 def main():
-    image = load_image()
-    inverted_image = cv2.bitwise_not(image)
-    contours_raw = get_contours(inverted_image)
+    face()
 
-    filtered_contours = filter(contours_raw)
-    potential_heads = get_circulaire_contour(filtered_contours, 50, 999)
-    potential_eyes = get_circulaire_contour(filtered_contours, 5, 30)
-    sliced_heads = slice_contours(potential_heads)
-    merged_heads = merge_contours_with_tolerance(sliced_heads)
-    heads, eyes = check_eyes(merged_heads, potential_eyes)
-    face_recognised = facial_recognition(image)
-    score = 0
-    if face_recognised:
-        score += 3
-    print(len(merged_heads))
-    for head in merged_heads:
-        contoured_image = cv2.drawContours(image, head, -1, (0, 255, 0), 2)
-        cv2.imshow('Contours', contoured_image)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-        continue
+def face():
+    folder_path = 'img/'
+    scores = []
+
+    for filename in os.listdir(folder_path):
+        score = 0
+        file_path = os.path.join(folder_path, filename)
+        image = load_image(file_path)
+        inverted_image = cv2.bitwise_not(image)
+        contours_raw = get_contours(inverted_image)
+
+        filtered_contours = filter(contours_raw, contours_raw)
+        potential_heads = get_circulaire_contour(filtered_contours, 50, 999)
+        potential_eyes = get_circulaire_contour(filtered_contours, 5, 50)
+        sliced_heads = slice_contours(potential_heads)
+        sliced_heads = filter(contours_raw, sliced_heads)
+        merged_heads = merge_contours_by_proximity(sliced_heads)
+        if merged_heads:
+            score = check_eyes(merged_heads, potential_eyes)
+        else:
+            score = 0
+        face_recognised = facial_recognition(image)
+        if face_recognised:
+            score += 4
+        scores.append(score / 4)
+    return scores
     
     
 
-def load_image():
+def load_image(img_path):
     # Laad de afbeelding
-    image = cv2.imread('img/nao.jpg' )
+    image = cv2.imread(img_path)
     if image is None:
         print("Afbeelding niet gevonden!")
         exit()
@@ -51,7 +58,7 @@ def get_contours(image):
     contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return contours
 
-def filter(contours_raw):
+def filter(contours_raw, contours):
     filtered_contours = []
     x_values = [subarray[0, 0] for array in contours_raw for subarray in array]
     y_values = [subarray[0, 1] for array in contours_raw for subarray in array]
@@ -68,7 +75,7 @@ def filter(contours_raw):
     right_middle = min_x + rob_width / 2 + 0.2 * rob_width
 
 
-    for i, contour in enumerate(contours_raw):
+    for i, contour in enumerate(contours):
         area = cv2.contourArea(contour)
         Xsum = 0
         Ysum = 0
@@ -178,16 +185,22 @@ def get_angle(v1, v2):
         angle = 360 - angle 
     return angle
 
-def check_eyes(heads, potential_eyes, error=5):
-    good_heads = []
-    for head in heads:
+def check_eyes(heads, potential_eyes, error=0):
+    score = 0
+    checked_eye_height = False
+    checked_eye_sides = False
+    checked_eye_sizes = False
+    for i, head in enumerate(heads):
+
         x_values = head[:, 0, 0]
-        y_values = head[:, 0, 1]
+        y_values = head[:, 0, 1] 
         min_x = min(x_values) - error
         max_x = max(x_values) + error
         min_y = min(y_values) - error
         max_y = max(y_values) + error
         eyes = []
+        eye_middles = []
+        eye_sizes = []
         for eye in potential_eyes:
             x_values = eye[:, 0, 0]
             y_values = eye[:, 0, 1]
@@ -195,20 +208,76 @@ def check_eyes(heads, potential_eyes, error=5):
             eye_max_x = max(x_values)
             eye_min_y = min(y_values)
             eye_max_y = max(y_values)
+
+            Xsum = 0
+            Ysum = 0
+            for j, point in enumerate(eye):
+                Xsum += point[0][0]
+                Ysum += point[0][1]
+            # Calculate the centroid
+            middle = [Xsum / (len(eye)), Ysum / (len(eye))]
+            size = cv2.contourArea(eye)
+
             if eye_min_x > min_x and eye_max_x < max_x and eye_min_y > min_y and eye_max_y < max_y:
+                eye_middles.append(middle)
                 eyes.append(eye)
+                eye_sizes.append(size)
             else:
                 continue
-        if len(eyes) >= 2:
-            good_heads.append(head)
-    return good_heads, eyes
 
-def slice_contours(heads, point_skip=3):
+        if len(eyes) == 2 or len(eyes) == 3:
+            eyes_same_height = False
+            for i in range(len(eye_middles)):
+                for j in range(i + 1, len(eye_middles)):
+                    if abs(eye_middles[i][1] - eye_middles[j][1]) <= 5:
+                        eyes_same_height = True
+                        break  # Break out of the `j` loop
+                if eyes_same_height:
+                    break  # Break out of the `i` loop if condition was met
+
+            eyes_same_size = False
+            for i in range(len(eye_sizes)):
+                for j in range(i + 1, len(eye_sizes)):
+                    if abs(eye_sizes[i] - eye_sizes[j]) <= 20:
+                        eyes_same_size = True
+                        break  # Break out of the `j` loop
+                if eyes_same_size:
+                    break  # Break out of the `i` loop if condition was met
+
+            Xsum = 0
+            Ysum = 0
+            for j, point in enumerate(head):
+                Xsum += point[0][0]
+                Ysum += point[0][1]
+            middle = [Xsum / (len(head)), Ysum / (len(head))]
+
+            above_count = 0
+            below_count = 0
+            #Count how many y-values are above and below the target_value
+            for eye in eye_middles:
+                x_value = eye[0]
+                if x_value > middle[0]:
+                    above_count += 1
+                elif x_value < middle[0]:
+                    below_count += 1
+            eyes_opposite_sides = above_count > 0 and below_count > 0
+            
+            if eyes_same_height and checked_eye_height == False:
+                checked_eye_height = True
+                score += 1
+            if eyes_opposite_sides and checked_eye_sides == False:
+                checked_eye_sides = True
+                score += 1
+            if eyes_same_size and checked_eye_sizes == False:
+                checked_eye_sizes = True
+                score += 1
+    return score
+
+def slice_contours(heads, point_skip=5):
     sliced_heads = []
     for head in heads:
         last_i = 0
         for i in range(len(head)):
-            
             # get points from contour to get an angle
             p1 = head[i][0]
             p2 = head[(i + point_skip) % len(head)][0]
@@ -221,54 +290,73 @@ def slice_contours(heads, point_skip=3):
             # check if angle is in boundaries
             if i == len(head)-1:
                 sliced_heads.append(head[last_i:])
-            elif angle < 200:
+            elif angle < 200 and angle > 75 :
                 continue
             else:
-                if i-last_i > 10:
+                if i - last_i > 10:
                     sliced_heads.append(head[last_i:i])
-                last_i = i
+                    last_i = i
     return sliced_heads
 
-def merge_contours_with_tolerance(contours, tolerance=5):
-    # Create a list to hold the y minimums
-    y_mins = []
-
-    # Iterate through each contour to find y minimum values
-    for contour in contours:
-        y_min = np.min(contour[:, :, 1])
-        y_mins.append(y_min)
-
-    # Sort the y minimum values and keep track of their original contours
-    y_mins_sorted_indices = np.argsort(y_mins)
-    sorted_y_mins = np.array(y_mins)[y_mins_sorted_indices]
-    sorted_contours = [contours[i] for i in y_mins_sorted_indices]
-
+def merge_contours_by_proximity(contours, tolerance=5):
     # List to hold the merged contours
     merged_contours = []
     current_group = []
 
-    # Merge contours based on y minimum similarity within the tolerance
-    for i in range(len(sorted_y_mins)):
-        if not current_group:
-            current_group.append(sorted_contours[i])  # Start a new group
+    # Function to get the first and last points of a contour
+    def first_last_points(contour):
+        return contour[0][0], contour[-1][0]  # Assumes contour is in (x, y) format with an extra dimension
 
-        # Check if the current y_min is within the tolerance of the first y_min in the group
-        elif abs(sorted_y_mins[i] - np.min([np.min(cnt[:, :, 1]) for cnt in current_group])) <= tolerance:
-            current_group.append(sorted_contours[i])  # Add to the current group
+    # Iterate over each contour to group and merge them based on proximity of endpoints
+    for contour in contours:
+        if not current_group:
+            current_group.append(contour)  # Start a new group if it's empty
+            continue
+
+        # Check if the first or last point of the current contour is close to any endpoint in the current group
+        endpoints_in_group = [first_last_points(cnt) for cnt in current_group]
+        current_first, current_last = first_last_points(contour)
+
+        # Check proximity of endpoints (first or last point) within the group
+        within_tolerance = any(
+            np.linalg.norm(np.array(current_first) - np.array(pt)) <= tolerance or
+            np.linalg.norm(np.array(current_last) - np.array(pt)) <= tolerance
+            for endpoints in endpoints_in_group for pt in endpoints
+        )
+        
+        if within_tolerance:
+            current_group.append(contour)  # Add to the current group
         else:
-            # Merge the current group and add to the result
-            merged_contour = np.vstack(current_group)
-            merged_contour = cv2.approxPolyDP(merged_contour, epsilon=1.0, closed=True)
-            merged_contours.append(merged_contour)
-            current_group = [sorted_contours[i]]  # Start a new group with the current contour
+            # Merge the current group if not empty
+            if current_group:
+                merged_contour = np.vstack(current_group)
+                # Check if merged_contour is valid before passing to approxPolyDP
+                if merged_contour.size > 0:
+                    merged_contour = cv2.approxPolyDP(merged_contour, epsilon=1.0, closed=True)
+                    if merged_contour is not None:
+                        merged_contours.append(merged_contour)
+                    else:
+                        print("Warning: approxPolyDP returned None for a contour.")
+                else:
+                    print("Warning: Attempted to merge an empty contour group.")
+            current_group = [contour]  # Start a new group with the current contour
 
     # Handle the last group if it exists
     if current_group:
         merged_contour = np.vstack(current_group)
-        merged_contour = cv2.approxPolyDP(merged_contour, epsilon=1.0, closed=True)
-        merged_contours.append(merged_contour)
+        # Check if merged_contour is valid before passing to approxPolyDP
+        if merged_contour.size > 0:
+            merged_contour = cv2.approxPolyDP(merged_contour, epsilon=1.0, closed=True)
+            if merged_contour is not None:
+                merged_contours.append(merged_contour)
+            else:
+                print("Warning: approxPolyDP returned None for the last contour.")
+        else:
+            print("Warning: Last group is empty; nothing to merge.")
 
-    return merged_contours
+    return merged_contours if merged_contours else None  # Return None if no valid contours
+
+
 
 if __name__ == "__main__":
     main()

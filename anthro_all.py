@@ -1,0 +1,17 @@
+from face import face
+from body_shape import human_likeness_score
+
+def main():
+    anthro()
+
+def anthro():
+    anthro_score = []
+    face_scores = face()
+
+    body = human_likeness_score()
+    for i, face_score in enumerate(face_scores):
+        anthro_score.append(face_score + body[i])
+    return anthro_score
+
+if __name__ == "__main__":
+    main()

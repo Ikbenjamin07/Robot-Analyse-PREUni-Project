@@ -189,7 +189,7 @@ def check_vector_angle_difference(contour, i, max_difference=1, point_skip=3):
 
 def load_image():
     # Laad de afbeelding
-    image = cv2.imread('img/Aibo.jpg')
+    image = cv2.imread('img/pepper.png')
     if image is None:
         print("Afbeelding niet gevonden!")
         exit()
