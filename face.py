@@ -12,6 +12,7 @@ def face():
     scores = []
 
     for filename in os.listdir(folder_path):
+        print(filename)
         score = 0
         file_path = os.path.join(folder_path, filename)
         image = load_image(file_path)

@@ -2,41 +2,47 @@ import cv2
 import numpy as np
 import robot_data
 import random
-
+import os
 
 def main():
-    robot_names = robot_data.make_robot_list("img/")
+    circle()
 
-    for name in robot_names:
-        image = load_image(name, "img/")
+def circle():
+    folder_path = 'img/'
+    score = []
+
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        image = load_image(file_path)
+        print(file_path)
         contours_raw = get_contours(image)
         circulaire_contours = get_circulaire_contour(contours_raw)
 
         length = int(get_total_length_of_contours(circulaire_contours))
+        length_raw = int(get_total_length_of_contours(contours_raw))
         area = int(get_total_opp_of_contours(circulaire_contours))
-        print(length, area, length/area)
-    #     # Maak een output afbeelding
-    #     output_image = image.copy()
 
-    #     for contour in circulaire_contours:
-    #         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-    #         cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
-
-    #     # Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
-    #     cv2.imshow(f'Circle Image: {name}', output_image)
-
-    # # Wacht tot een toets is ingedrukt om alle vensters te sluiten
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+        score.append(length/length_raw)
+    return score
+         # Maak een output afbeelding
+        #output_image = image.copy()
+        #for contour in circulaire_contours:
+        #    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        #    cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
+        ## Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
+        #cv2.imshow(f'Circle ISmage: {filename}', output_image)
+        #cv2.waitKey(0)
+        #cv2.destroyAllWindows
+    # Wacht tot een toets is ingedrukt om alle vensters te sluiten
 
 #image processing functions
-def load_image(name, dir):
+def load_image(img_path):
     # Laad de afbeelding
-    image = cv2.imread(f'{dir}{name}')
+    image = cv2.imread(img_path)
     if image is None:
         print("Afbeelding niet gevonden!")
         exit()
-    return image 
+    return image
 
 def get_contours(image):
     # Converteer de afbeelding naar grijswaarden
