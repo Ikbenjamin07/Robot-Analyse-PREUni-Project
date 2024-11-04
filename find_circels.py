@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import robot_data
+import robot_data as robot_data
 import random
 import os
 
@@ -12,6 +12,7 @@ def circle():
     score = []
 
     for filename in os.listdir(folder_path):
+        print(filename)
         file_path = os.path.join(folder_path, filename)
         image = load_image(file_path)
         print(file_path)
@@ -24,16 +25,19 @@ def circle():
 
         score.append(length/length_raw)
     return score
-         # Maak een output afbeelding
-        #output_image = image.copy()
-        #for contour in circulaire_contours:
-        #    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        #    cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
-        ## Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
-        #cv2.imshow(f'Circle ISmage: {filename}', output_image)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows
-    # Wacht tot een toets is ingedrukt om alle vensters te sluiten
+    #     # Maak een output afbeelding
+    #     output_image = image.copy()
+
+    #     for contour in circulaire_contours:
+    #         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+    #         cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
+
+    #     # Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
+    #     cv2.imshow(f'Circle Image: {name}', output_image)
+
+    # # Wacht tot een toets is ingedrukt om alle vensters te sluiten
+    # cv2.waitKey(0)
+    # cv2.destroyAllWindows()
 
 #image processing functions
 def load_image(img_path):
@@ -42,7 +46,7 @@ def load_image(img_path):
     if image is None:
         print("Afbeelding niet gevonden!")
         exit()
-    return image
+    return image 
 
 def get_contours(image):
     # Converteer de afbeelding naar grijswaarden
@@ -118,6 +122,18 @@ def get_circulaire_contour(contours, point_skip=3):
 
     # get rid of angels
     for contour in shape_contours:
+        _, _, curvature = big_enough_curvature(contour, point_skip=3)
+        contour = check_angle(contour, curvature, max_angle=1)
+        for sub_contour in contour:
+            if len(sub_contour) > 20:
+                q += 1
+                holding_list_of_contours.append(sub_contour)
+
+    shape_contours = holding_list_of_contours
+    holding_list_of_contours = []
+
+    # get rid of angels
+    for contour in shape_contours:
         _, _, curvature = big_enough_curvature(contour, point_skip=2)
         contour = check_angle(contour, curvature, max_angle=1)
         for sub_contour in contour:
@@ -131,7 +147,7 @@ def get_circulaire_contour(contours, point_skip=3):
     # get rid of angels
     for contour in shape_contours:
         _, _, curvature = big_enough_curvature(contour, point_skip=1)
-        contour = check_angle(contour, curvature, max_angle=2)
+        contour = check_angle(contour, curvature, max_angle=1)
         for sub_contour in contour:
             if len(sub_contour) > 20:
                 q += 1
@@ -242,7 +258,7 @@ def big_enough_curvature(contour, point_skip=1):
     n = contour.shape[0]
     curvature = np.zeros(n)
 
-    for i in range(2, n - 2):
+    for i in range(point_skip, n - point_skip):
         # Haal de coördinaten van de punten
         x_prev, y_prev = contour[i - point_skip]
         x_curr, y_curr = contour[i]
