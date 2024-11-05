@@ -25,19 +25,16 @@ def circle():
 
         score.append(length/length_raw)
     return score
-    #     # Maak een output afbeelding
-    #     output_image = image.copy()
-
-    #     for contour in circulaire_contours:
-    #         color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-    #         cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
-
-    #     # Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
-    #     cv2.imshow(f'Circle Image: {name}', output_image)
-
-    # # Wacht tot een toets is ingedrukt om alle vensters te sluiten
-    # cv2.waitKey(0)
-    # cv2.destroyAllWindows()
+         # Maak een output afbeelding
+        #output_image = image.copy()
+        #for contour in circulaire_contours:
+        #    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        #    cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
+        ## Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
+        #cv2.imshow(f'Circle Image: {file_path}', output_image)
+        #cv2.waitKey(0)
+     # Wacht tot een toets is ingedrukt om alle vensters te sluiten
+    cv2.destroyAllWindows()
 
 #image processing functions
 def load_image(img_path):

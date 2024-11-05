@@ -17,13 +17,13 @@ def get_contours(thresh_image):
 
 def symmetry_score(image):
     # Calculate vertical and horizontal symmetry
-    flipped_vertically = cv2.flip(image, 0)
+    #flipped_vertically = cv2.flip(image, 0)
     flipped_horizontally = cv2.flip(image, 1)
     
-    vertical_symmetry = np.sum(image == flipped_vertically) / image.size
+    #vertical_symmetry = np.sum(image == flipped_vertically) / image.size
     horizontal_symmetry = np.sum(image == flipped_horizontally) / image.size
     
-    return (vertical_symmetry + horizontal_symmetry) / 2  # Average symmetry score
+    return (horizontal_symmetry) / 2  # Average symmetry score
 
 def aspect_ratio_score(contour):
     # Calculate the aspect ratio of the bounding rectangle

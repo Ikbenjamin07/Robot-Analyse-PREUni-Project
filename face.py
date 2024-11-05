@@ -16,8 +16,7 @@ def face():
         score = 0
         file_path = os.path.join(folder_path, filename)
         image = load_image(file_path)
-        inverted_image = cv2.bitwise_not(image)
-        contours_raw = get_contours(inverted_image)
+        contours_raw = get_contours(image)
 
         filtered_contours = filter(contours_raw, contours_raw)
         potential_heads = get_circulaire_contour(filtered_contours, 50, 999)
