@@ -9,6 +9,7 @@ import statsmodels.api as sm
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from angeles_2_0 import angle 
 
 
 def main():
@@ -16,17 +17,18 @@ def main():
     spatial_frequency  = SF()
     anthro_score = anthro()
     #circles = circle()
-    df = pd.DataFrame({'names': robots, 'offers': dictator_offer, 'SF': spatial_frequency, 'anthro': anthro_score,})
+    angle_score = angle()
+    df = pd.DataFrame({'names': robots, 'offers': dictator_offer, 'SF': spatial_frequency, 'anthro': anthro_score, 'angle': angle_score})
     #print(df)
     df.to_csv('df.csv')
 
     #df = pd.read_csv('df.csv')
-    res = stats.pearsonr(df['anthro'], df['offers'])
+    res = stats.pearsonr(df['angle'], df['offers'])
     print(res)
 
-    X = df[['SF', 'anthro']]
+    X = df[['SF', 'anthro', 'angle']]
     y = df['offers']
-#
+
     regr = linear_model.LinearRegression()
     regr.fit(X, y)
     #print(regr.coef_)
@@ -43,11 +45,10 @@ def main():
     #ax.set(xlim=(Y_min, Y_max))
     #ax.set_xlabel("predicted offer")
     #ax.set_ylabel("observed offer")
-
     #X_ref = Y_ref = np.linspace(Y_min, Y_max, 100)
     #plt.plot(X_ref, Y_ref, color='red', linewidth=1)
-    #print(X_ref)
-    #print(Y_ref)
+    ##print(X_ref)
+    ##print(Y_ref)
     #plt.show()
 
     r_squared = results.rsquared
