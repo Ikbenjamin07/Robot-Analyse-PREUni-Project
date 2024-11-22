@@ -30,8 +30,8 @@ def face():
             score = 0
         face_recognised = facial_recognition(image)
         if face_recognised:
-            score += 4
-        scores.append(score / 4)
+            score += 20
+        scores.append(score / 20)
     return scores
     
     
@@ -267,7 +267,7 @@ def check_eyes(heads, potential_eyes, error=0):
                 score += 1
             if eyes_opposite_sides and checked_eye_sides == False:
                 checked_eye_sides = True
-                score += 1
+                score += 4
             if eyes_same_size and checked_eye_sizes == False:
                 checked_eye_sizes = True
                 score += 1
