@@ -26,7 +26,7 @@ def main():
     res = stats.pearsonr(df['angle'], df['offers'])
     print(res)
 
-    X = df[['SF', 'anthro', 'angle']]
+    X = df[['SF',  'angle']]
     y = df['offers']
 
     regr = linear_model.LinearRegression()
