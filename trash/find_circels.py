@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-import robot_data as robot_data
+import trash.robot_data as robot_data
 import random
 import os
 
@@ -15,24 +15,24 @@ def circle():
         print(filename)
         file_path = os.path.join(folder_path, filename)
         image = load_image(file_path)
+        print(file_path)
         contours_raw = get_contours(image)
-        filtered_contours = remove_double(contours_raw)
-        circulaire_contours = get_circulaire_contour(filtered_contours)
+        circulaire_contours = get_circulaire_contour(contours_raw)
 
         length = int(get_total_length_of_contours(circulaire_contours))
         length_raw = int(get_total_length_of_contours(contours_raw))
         area = int(get_total_opp_of_contours(circulaire_contours))
 
         score.append(length/length_raw)
-
+    return score
          # Maak een output afbeelding
-        output_image = image.copy()
-        for contour in circulaire_contours:
-            color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-            cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
-        # Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
-        cv2.imshow(f'Circle Image: {file_path}', output_image)
-        cv2.waitKey(0)
+        #output_image = image.copy()
+        #for contour in circulaire_contours:
+        #    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
+        #    cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
+        ## Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
+        #cv2.imshow(f'Circle Image: {file_path}', output_image)
+        #cv2.waitKey(0)
      # Wacht tot een toets is ingedrukt om alle vensters te sluiten
     cv2.destroyAllWindows()
 
@@ -103,42 +103,95 @@ def get_circulaire_contour(contours, point_skip=3):
     s = 0
     # print(len(contours))
     for contour in contours:
-        if len(contour) > 20:
-            c = []
-            for point in contour:
-                c.append(point[0])
-            shape_contours.append(c)
+        list_curves = []
+        # check if there are circulair ish shapes in the contour 
+        for i in range(len(contour)):
+            circle_length = circle_long_enough(contour, i, point_skip)
+            if circle_length >= 5:
+                list_curves.append([circle_length, i])
 
-    # get rid of angles
+        #  get the curved parts of the contours 
+        if len(list_curves) != 0:
+            list_curves_clean = filter_circles(list_curves)
+            shape_contour = calculate_contour_circle(contour, list_curves_clean)
+            for contour in shape_contour:
+                shape_contours.append(contour)
+
+    # get rid of angels
     for contour in shape_contours:
         _, _, curvature = big_enough_curvature(contour, point_skip=3)
-        contour = check_angle(contour, curvature)
+        contour = check_angle(contour, curvature, max_angle=1)
         for sub_contour in contour:
-            if len(sub_contour) > 2:
+            if len(sub_contour) > 20:
                 q += 1
                 holding_list_of_contours.append(sub_contour)
 
     shape_contours = holding_list_of_contours
-    print(shape_contours)
     holding_list_of_contours = []
 
-    # #hough lines
+    # get rid of angels
+    for contour in shape_contours:
+        _, _, curvature = big_enough_curvature(contour, point_skip=2)
+        contour = check_angle(contour, curvature, max_angle=1)
+        for sub_contour in contour:
+            if len(sub_contour) > 20:
+                q += 1
+                holding_list_of_contours.append(sub_contour)
+
+    shape_contours = holding_list_of_contours
+    holding_list_of_contours = []
+
+    # get rid of angels
+    for contour in shape_contours:
+        _, _, curvature = big_enough_curvature(contour, point_skip=1)
+        contour = check_angle(contour, curvature, max_angle=1)
+        for sub_contour in contour:
+            if len(sub_contour) > 20:
+                q += 1
+                holding_list_of_contours.append(sub_contour)
+
+    shape_contours = holding_list_of_contours
+    holding_list_of_contours = []
+
+    #hough lines
+    for contour in shape_contours:
+        lines = detect_lines_from_contour(contour)
+        # Verwijder punten dicht bij de gedetecteerde lijnen
+        filtered_contour = remove_points_near_lines(contour, lines)
+        for contour in filtered_contour:
+            if len(contour) > 5:
+                holding_list_of_contours.append(contour)
+    
+    shape_contours = holding_list_of_contours
+    holding_list_of_contours = []
+
+    # # check for streight lines again...
     # for contour in shape_contours:
-    #     lines = detect_lines_from_contour(contour)
-    #     # Verwijder punten dicht bij de gedetecteerde lijnen
-    #     filtered_contour = remove_points_near_lines(contour, lines)
-    #     for contour in filtered_contour:
-    #         if len(contour) > 5:
-    #             holding_list_of_contours.append(contour)
+    #     contour = line_check2(contour)
+    #     if len(contour) > 20:
+    #         s += 1
+    #         holding_list_of_contours.append(contour)
     
     # shape_contours = holding_list_of_contours
     # holding_list_of_contours = []
 
     
+    # get rid of streight lines 
+    for contour in shape_contours:
+        _, _, curvature = big_enough_curvature(contour, point_skip=1)
+        contour = line_check(contour, curvature)
+        for sub_contour in contour:
+            if len(sub_contour) > 20:
+                p += 1
+                holding_list_of_contours.append(sub_contour)
+
+    shape_contours = holding_list_of_contours
+    holding_list_of_contours = []
+
     # # get rid of streight lines 
     # for contour in shape_contours:
     #     _, _, curvature = big_enough_curvature(contour, point_skip=1)
-    #     contour = line_check(contour, curvature)
+    #     contour = filter_contour_by_curvature(contour, curvature)
     #     for sub_contour in contour:
     #         if len(sub_contour) > 20:
     #             p += 1
@@ -147,19 +200,14 @@ def get_circulaire_contour(contours, point_skip=3):
     # shape_contours = holding_list_of_contours
     # holding_list_of_contours = []
 
+
+    # for contour in shape_contours:
+    #     _, _, curvature = big_enough_curvature(contour)
+    #     print(curvature)
+
     # print(p, q, r, s)
     drawable_contour = make_shape_contour_drawable(shape_contours)
     return drawable_contour
-
-def remove_double(contours):
-    new_contours = []
-    for contour in contours: 
-        if cv2.contourArea(contour) < 5:
-            new_contour = contour[:round(len(contour)/2)]
-            new_contours.append(new_contour)
-        else:
-            new_contours.append(contour)
-    return new_contours
 
 def circle_long_enough(contour, i, point_skip):
 
@@ -196,7 +244,7 @@ def circle_long_enough(contour, i, point_skip):
         
         
 
-        if a2 <= a1 and a2 >= a1 - 180 == True:
+        if a2 <= a1 and a2 >= a1 - 180 and check_vector_angle_difference(contour, i+k) == True:
             circle_length += 1
         else:
             return circle_length
@@ -278,15 +326,27 @@ def calculate_contour_circle(contour, list_curves):
         shape_contour.append(c)
     return shape_contour
 
-def line_check(curvature):
+def line_check(contour, curvature):
     result = []
     count = 0
+    start_index = 0
     for i, num in enumerate(curvature):
-        if num < 0.2:
+        if num < 0.1:
             count += 1
         else:
-            return count
-    return count
+            if count > 10:
+                # Split the list and remove the zeros
+                result.append(contour[start_index:i - count])  # Before the zeros
+                start_index = i
+            count = 0  # Reset the count for non-zero
+
+    # Handle the case for the last segment
+    if count > 10:
+        result.append(contour[start_index:len(contour) - count])  # Before the zeros
+    else:
+        result.append(contour[start_index:])  # Remaining part of the list
+
+    return result
 
 def line_check2(contour):
     list_of_points_to_delete = []
@@ -361,24 +421,27 @@ def radius_check(contour):
 
     return radius_differance
 
-def check_angle(contour, curvature, max_angle=2):
+def check_angle(contour, curvature, max_angle=1):
     result = []
     count = 0
     start_index = 0
+
     for i, num in enumerate(curvature):
         if num >= max_angle:
-            before_angle_curvature = curvature[:i][::-1]
-            after_angle_curvature = curvature[i+2:]
+            count += 1
+        else:
+            if count > 0:
+                # Split the list and remove the zeros
+                result.append(contour[start_index:i - count])  # Before the zeros
+                start_index = i
+            count = 0  # Reset the count for non-zero
 
-            count_before = line_check(before_angle_curvature)
-            count_after = line_check(after_angle_curvature)
-            if count_before > 0 and count_after > 0:
-                result.append(contour[i - count_before: i + count_after])
-                print(' boom ')
-    print(result)
+    # Handle the case for the last segment
+    if count > 0:
+        result.append(contour[start_index:len(contour) - count])  # Before the zeros
+    else:
+        result.append(contour[start_index:])  # Remaining part of the list
     return result
-
-
 
 def detect_lines_from_contour(contour, threshold=40):
     # Maak een lege afbeelding die groot genoeg is om de contour te bevatten

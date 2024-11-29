@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import os 
-import robot_data as robot_data
+import trash.robot_data as robot_data
 import random
 
 
@@ -29,12 +29,12 @@ def angle():
     # return score
         # Maak een output afbeelding
         #output_image = image.copy()
-#
+
         #for coord in angle_points:
         #    coord = coord[0]
         #    color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
         #    cv2.polylines(output_image, [contour], isClosed=False, color=color, thickness=2)
-#
+
         ## Toon de originele afbeelding en de afbeelding met gedetecteerde contouren
         #cv2.imshow(f'Circle Image: {filename}', output_image)
         score.append(len(angle_points))
