@@ -1,4 +1,4 @@
-from Julia import SF
+from SF import SF
 from dictator_offer import Get_Lists
 from anthro_all import anthro
 import pandas as pd
@@ -8,8 +8,8 @@ import statsmodels.api as sm
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from angeles_3_0 import angle 
-from circles_2_0 import circle
+from angles import angle 
+from circles import circle
 
 
 def main():
