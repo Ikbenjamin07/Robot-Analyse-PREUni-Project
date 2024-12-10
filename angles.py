@@ -21,9 +21,6 @@ def angle():
         angle_contours = get_angulair_contours(contours_raw)
         filterd_contours = filter_contours(angle_contours)
         drawable_angle_contour = make_shape_contour_drawable(filterd_contours)
-        length = int(get_total_length_of_contours(drawable_angle_contour))
-        length_raw = int(get_total_length_of_contours(contours_raw))
-        area = int(get_total_opp_of_contours(drawable_angle_contour))
 
         score.append(len(drawable_angle_contour)/1000)
 
@@ -231,18 +228,6 @@ def make_shape_contour_drawable(contours):
         drawable_contours.append(np.array([contour], dtype=np.int32))
     return drawable_contours
 
-def get_total_length_of_contours(contours):
-    total_length = 0
-    for contour in contours:
-        length = cv2.arcLength(contour, True)
-        total_length = total_length + length
-    return total_length
-
-def get_total_opp_of_contours(contours):
-    total_area = 0
-    for contour in contours:
-        total_area = total_area + cv2.contourArea(contour)
-    return total_area
 
 def remove_double(contours):
     new_contours = []
