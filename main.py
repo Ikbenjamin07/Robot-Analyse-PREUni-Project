@@ -2,7 +2,6 @@ from SF import SF
 from dictator_offer import Get_Lists
 from anthro_all import anthro
 import pandas as pd
-from scipy import stats
 from sklearn import linear_model
 import statsmodels.api as sm
 import numpy as np
