@@ -1,7 +1,6 @@
 import cv2
 import numpy as np
 import os 
-import trash.robot_data as robot_data
 import random
 
 
