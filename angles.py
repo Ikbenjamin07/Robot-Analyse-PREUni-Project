@@ -11,6 +11,7 @@ def angle():
     folder_path = 'img/'
     score = []
     sorted_files = sort_files()
+    #get all angulaire points for every image
     for filename in sorted_files:
         print(filename)
         file_path = os.path.join(folder_path, filename)
@@ -18,8 +19,7 @@ def angle():
         contours_raw = get_contours(image)
         contours_raw = remove_double(contours_raw)
         angle_contours = get_angulair_contours(contours_raw)
-        filterd_contours = filter_contours(angle_contours)
-        drawable_angle_contour = make_shape_contour_drawable(filterd_contours)
+        drawable_angle_contour = make_shape_contour_drawable(angle_contours)
 
         score.append(len(drawable_angle_contour)/1000)
 
@@ -54,13 +54,11 @@ def get_angulair_contours(contours):
             # [[x,y][x,y] enz...]
             angle_contour = get_contour_fragment(contour, angle_point, angle_length_neg, angle_length_pos)
             angulair_contours.append(angle_contour)
-
-    
     return angulair_contours
 
 
 
-def get_angle_point(contour, point_skip=3, max_angle=50):
+def get_angle_point(contour, point_skip=3, max_angle=60):
     angle_points = []
     for i, point in enumerate(contour): 
         try:
@@ -83,7 +81,6 @@ def get_angle_point(contour, point_skip=3, max_angle=50):
 def get_angle_length(angle_point, contour, point_skip=3, max_angle_devation=5):
     i, angle = angle_point
     start_point = i
-    # pos_length
     try:
         point_A = contour[start_point-point_skip][0]
         point_B = contour[start_point][0]
@@ -109,7 +106,6 @@ def get_angle_length(angle_point, contour, point_skip=3, max_angle_devation=5):
             positive_length += 1
             p_start += 1
             
-            #print(angle, a_ABX, positive_length, point_A, point_B, point_C, point_X)
         else:
             break
 
@@ -127,40 +123,16 @@ def get_angle_length(angle_point, contour, point_skip=3, max_angle_devation=5):
         if angle-max_angle_devation < a_ABX < angle+max_angle_devation:
             negative_length += 1
             n_start -= 1
-            #print(n_start)
         else:
             break
-
-    # if negative_length >= 5 + positive_length:
-    #     negative_length = positive_length + 5
-    # if positive_length >= 5 + negative_length:
-    #     positive_length = negative_length + 5
-
-    # if negative_length >= 5:
-    #     negative_length = 5
-    # if positive_length >= 5:
-    #     positive_length = 5
-
     return negative_length, positive_length
-
-
-
-def filter_contours(contours, min_contour_length=0):
-    new_contours = []
-    for contour in contours:
-        if len(contour) > min_contour_length:
-            new_contours.append(contour)
-    return new_contours
-
 
 def get_contour_fragment(contour, angle_point, angle_length_neg, angle_length_pos):
     new_contour= []
-    #print(angle_point[0], angle_length_neg, angle_length_pos, len(contour))
     for i in range(angle_length_neg):
        new_contour.append(contour[angle_point[0]-angle_length_neg+i][0])
     for i in range(angle_length_pos):
         new_contour.append(contour[angle_point[0]+i][0])
-    #print(new_contour)
     return new_contour
 
 #image processing functions
@@ -204,7 +176,6 @@ def get_angle(v1, v2):
 
 
 # contour functios 
-
 def sort_files():
     # Path to the directory containing images
     directory = "img/"
@@ -220,13 +191,11 @@ def sort_files():
 
     return sorted_files
 
-
 def make_shape_contour_drawable(contours):
     drawable_contours = []
     for contour in contours:
         drawable_contours.append(np.array([contour], dtype=np.int32))
     return drawable_contours
-
 
 def remove_double(contours):
     new_contours = []
