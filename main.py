@@ -13,19 +13,19 @@ from circles import circle
 
 
 def main():
-    #robots, dictator_offer = Get_Lists()
-    #spatial_frequency  = SF()
-    #anthro_score = anthro()
-    #circles = circle()
-    #angle_score = angle()
-    #df = pd.DataFrame({'names': robots, 'offers': dictator_offer, 'SF': spatial_frequency, 'anthro': anthro_score, 'angle': angle_score, 'circle': circles})
-    ##print(df)
-    #df.to_csv('df.csv')
+    robots, dictator_offer = Get_Lists()
+    spatial_frequency  = SF()
+    anthro_score = anthro()
+    circles = circle()
+    angle_score = angle()
+    df = pd.DataFrame({'names': robots, 'offers': dictator_offer, 'SF': spatial_frequency, 'anthro': anthro_score, 'angle': angle_score, 'circle': circles})
+    #print(df)
+    df.to_csv('df.csv')
 
     df = pd.read_csv('df.csv')
 
 
-    X = df[['SF', 'angle', 'anthro', 'circle']]
+    X = df[['SF',  'anthro', 'circle']]
     y = df['offers']
 
     regr = linear_model.LinearRegression()
